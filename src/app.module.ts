@@ -5,6 +5,7 @@ import { FirebaseConfig } from './config/firebase.config';
 import { HealthModule } from './health/health.module';
 import { PrismaModule } from './config/prisma/prisma.module';
 import { UserModule } from './user/user.module';
+import { QuestionModule } from './question/question.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { UserModule } from './user/user.module';
     HealthModule,
     PrismaModule,
     UserModule,
+    QuestionModule,
   ],
   providers: [FirebaseConfig],
 })

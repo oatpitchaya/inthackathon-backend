@@ -8,69 +8,69 @@ datasource db {
 }
 
 model User {
-  id             Int               @id @default(autoincrement())
-  username       String
-  email          String            @unique
-  createdAt      DateTime          @default(now())
+  id        Int      @id @default(autoincrement())
+  username  String
+  email     String   @unique
+  createdAt DateTime @default(now())
 
-  character      Character?
-  lessonProgress LessonProgress[]
-  quizProgress   QuizProgress[]
-  appearanceOwn  AppearanceOwn[]
-  gachapongs     Gachapong[]
+  character       Character?
+  lessonProgress  LessonProgress[]
+  quizProgress    QuizProgress[]
+  appearanceOwn   AppearanceOwn[]
+  gachapongs      Gachapong[]
   rewardsRedeemed RewardRedeemed[]
-  appearanceWears AppearanceWear[]  // Add this for relation to AppearanceWear
+  appearanceWears AppearanceWear[] // Add this for relation to AppearanceWear
 }
 
 model Character {
-  id       Int   @id @default(autoincrement())
-  userId   Int   @unique
-  level    Int   @default(1)
-  exp      Int   @default(0)
-  coin     Int   @default(0)
-  ticket   Int   @default(0)
+  id     Int @id @default(autoincrement())
+  userId Int @unique
+  level  Int @default(1)
+  exp    Int @default(0)
+  coin   Int @default(0)
+  ticket Int @default(0)
 
-  user     User  @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }
 
 model Skill {
-  id                   Int                   @id @default(autoincrement())
-  skill_name           String
-  skill_type           String
-  image_url            String
-  introAnswerWeights   IntroAnswerWeight[]   // Relation to IntroAnswerWeight
-  skillCareers         SkillCareer[]         // Relation to SkillCareer
-  lessons              Lesson[]              // Relation to Lesson
+  id           Int           @id @default(autoincrement())
+  skill_name   String
+  skill_type   String
+  image_url    String
+  skillCareers SkillCareer[] // Relation to SkillCareer
+  lessons      Lesson[] // Relation to Lesson
+  Introanswer  IntroAnswer[]
 }
 
 model Career {
-  id         Int    @id @default(autoincrement())
-  name       String
+  id          Int     @id @default(autoincrement())
+  name        String
   description String?
-  imageUrl   String?
+  imageUrl    String?
 
-  skills     SkillCareer[]
+  skills SkillCareer[]
 }
 
 model SkillCareer {
   skillId  Int
   careerId Int
 
-  skill    Skill  @relation(fields: [skillId], references: [id])
-  career   Career @relation(fields: [careerId], references: [id])
+  skill  Skill  @relation(fields: [skillId], references: [id])
+  career Career @relation(fields: [careerId], references: [id])
 
   @@id([skillId, careerId]) // Composite Primary Key
 }
 
 model Lesson {
-  id          Int    @id @default(autoincrement())
+  id          Int     @id @default(autoincrement())
   skillId     Int
   name        String
   description String?
 
-  skill       Skill   @relation(fields: [skillId], references: [id])
+  skill          Skill            @relation(fields: [skillId], references: [id])
   lessonProgress LessonProgress[]
-  quizzes     Quiz[]
+  quizzes        Quiz[]
 }
 
 model LessonProgress {
@@ -82,28 +82,28 @@ model LessonProgress {
   xp         Int
   ticket     Int
 
-  user       User   @relation(fields: [userId], references: [id])
-  lesson     Lesson @relation(fields: [lessonId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+  lesson Lesson @relation(fields: [lessonId], references: [id])
 }
 
 model Quiz {
-  id           Int    @id @default(autoincrement())
-  lessonId     Int
-  name         String
+  id            Int    @id @default(autoincrement())
+  lessonId      Int
+  name          String
   correctAnswer String
-  passScore    Int
+  passScore     Int
 
-  lesson       Lesson   @relation(fields: [lessonId], references: [id])
+  lesson       Lesson         @relation(fields: [lessonId], references: [id])
   choices      QuizChoice[]
   quizProgress QuizProgress[]
 }
 
 model QuizChoice {
-  id       Int    @id @default(autoincrement())
-  quizId   Int
-  choice   String
+  id     Int    @id @default(autoincrement())
+  quizId Int
+  choice String
 
-  quiz     Quiz   @relation(fields: [quizId], references: [id])
+  quiz Quiz @relation(fields: [quizId], references: [id])
 }
 
 model QuizProgress {
@@ -113,33 +113,25 @@ model QuizProgress {
   score      Int
   completeAt DateTime @default(now())
 
-  user       User   @relation(fields: [userId], references: [id])
-  quiz       Quiz   @relation(fields: [quizId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+  quiz Quiz @relation(fields: [quizId], references: [id])
 }
 
 model IntroQuestion {
   id       Int    @id @default(autoincrement())
   question String
 
-  answers  IntroAnswer[]
+  answers IntroAnswer[]
 }
 
 model IntroAnswer {
-  id          Int    @id @default(autoincrement())
-  questionId  Int
-  answer      String
-
-  question    IntroQuestion @relation(fields: [questionId], references: [id])
-  answerWeights IntroAnswerWeight[]
-}
-
-model IntroAnswerWeight {
-  skill      Skill       @relation(fields: [skillId], references: [id])
-  answer     IntroAnswer @relation(fields: [answerId], references: [id])
+  id         Int    @id @default(autoincrement())
+  questionId Int
+  answer     String
   skillId    Int
-  answerId   Int
 
-  @@id([skillId, answerId])  // Composite ID for IntroAnswerWeight
+  question IntroQuestion @relation(fields: [questionId], references: [id])
+  skill    Skill         @relation(fields: [skillId], references: [id])
 }
 
 model Appearance {
@@ -149,18 +141,18 @@ model Appearance {
   rate        Int
   type        String
 
-  owners      AppearanceOwn[]
-  gachapongs   Gachapong[] 
-  appearanceWears AppearanceWear[]  // Relation to AppearanceWear
+  owners          AppearanceOwn[]
+  gachapongs      Gachapong[]
+  appearanceWears AppearanceWear[] // Relation to AppearanceWear
 }
 
 model AppearanceOwn {
-  id           Int    @id @default(autoincrement())
+  id           Int @id @default(autoincrement())
   userId       Int
   appearanceId Int
 
-  user         User       @relation(fields: [userId], references: [id])
-  appearance   Appearance @relation(fields: [appearanceId], references: [id])
+  user       User       @relation(fields: [userId], references: [id])
+  appearance Appearance @relation(fields: [appearanceId], references: [id])
 
   @@unique([userId, appearanceId]) // Ensures a user owns the appearance once
 }
@@ -169,28 +161,28 @@ model AppearanceWear {
   userId       Int
   appearanceId Int
 
-  user         User       @relation(fields: [userId], references: [id])
-  appearance   Appearance @relation(fields: [appearanceId], references: [id])
+  user       User       @relation(fields: [userId], references: [id])
+  appearance Appearance @relation(fields: [appearanceId], references: [id])
 
   @@unique([userId, appearanceId]) // Ensures a user wears the appearance only once
 }
 
 model Gachapong {
-  id           Int        @id @default(autoincrement())
+  id           Int         @id @default(autoincrement())
   userId       Int
   appearanceId Int?
-  user         User       @relation(fields: [userId], references: [id])
+  user         User        @relation(fields: [userId], references: [id])
   appearance   Appearance? @relation(fields: [appearanceId], references: [id])
 }
 
 model Reward {
-  id          Int    @id @default(autoincrement())
+  id          Int     @id @default(autoincrement())
   name        String
   description String?
   amount      Int
   cost        Int
 
-  redeemed    RewardRedeemed[]
+  redeemed RewardRedeemed[]
 }
 
 model RewardRedeemed {
@@ -198,6 +190,6 @@ model RewardRedeemed {
   userId   Int
   rewardId Int
 
-  user     User   @relation(fields: [userId], references: [id])
-  reward   Reward @relation(fields: [rewardId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+  reward Reward @relation(fields: [rewardId], references: [id])
 }
