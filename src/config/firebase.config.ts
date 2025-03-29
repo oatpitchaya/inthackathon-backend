@@ -9,7 +9,6 @@ export class FirebaseConfig {
 
   constructor(private configService: ConfigService) {
     if (!admin.apps.length) {
-      // ✅ Check if Firebase is already initialized
       const credentialPath =
         this.configService.get<string>('FIREBASE_CREDENTIALS_PATH') ||
         'config/inthackathon-firebase-adminsdk-fbsvc-bb93a52e4a.json';

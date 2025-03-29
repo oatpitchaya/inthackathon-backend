@@ -1,13 +1,15 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable } from '@nestjs/common';
 import * as admin from 'firebase-admin';
 import * as jwt from 'jsonwebtoken';
+import { PrismaService } from 'src/config/prisma/prisma.service';
 
 @Injectable()
 export class AuthService {
-  constructor() {
+  constructor(private readonly prisma: PrismaService) {
     if (admin.apps.length === 0) {
       admin.initializeApp({
         credential: admin.credential.cert(
@@ -19,7 +21,6 @@ export class AuthService {
 
   async signInWithLine(idToken: string) {
     try {
-      // Decode LINE id_token to check its contents
       const decoded = jwt.decode(idToken) as any;
       if (!decoded || !decoded.sub || !decoded.email) {
         throw new Error('Invalid LINE ID Token');
@@ -30,28 +31,47 @@ export class AuthService {
       const name = decoded.name;
       const picture = decoded.picture;
 
-      // Log the decoded token to inspect
-      console.log('Decoded Token:', decoded);
-
       let firebaseUser;
       try {
-        // Check if the user exists in Firebase
         firebaseUser = await admin.auth().getUserByEmail(email);
       } catch (error: any) {
         if (error.code === 'auth/user-not-found') {
-          // If user doesn't exist, create a new Firebase user
           firebaseUser = await admin.auth().createUser({
             uid: lineUserId,
+            email,
+            displayName: name,
+            photoURL: picture,
           });
         } else {
           throw error;
         }
       }
 
-      // Generate Firebase authentication token
       const firebaseToken = await admin
         .auth()
         .createCustomToken(firebaseUser.uid);
+
+      const existingUser = await this.prisma.user.findUnique({
+        where: { email },
+      });
+
+      if (!existingUser) {
+        try {
+          const newUser = await this.prisma.user.create({
+            data: {
+              email,
+              username: lineUserId,
+              createdAt: new Date(),
+            },
+          });
+          console.log('New user created in the database:', newUser);
+        } catch (dbError) {
+          console.error('Failed to insert user into the database:', dbError);
+          throw new Error('Database user creation failed');
+        }
+      } else {
+        console.log('Existing user found in the database:', existingUser);
+      }
 
       return {
         firebaseToken,

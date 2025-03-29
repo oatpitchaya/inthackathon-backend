@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,4 +5,199 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int               @id @default(autoincrement())
+  username       String
+  email          String            @unique
+  createdAt      DateTime          @default(now())
+
+  character      Character?
+  lessonProgress LessonProgress[]
+  quizProgress   QuizProgress[]
+  appearanceOwn  AppearanceOwn[]
+  gachapongs     Gachapong[]
+  rewardsRedeemed RewardRedeemed[]
+  appearanceWears AppearanceWear[]  // Add this for relation to AppearanceWear
+}
+
+model Character {
+  id       Int   @id @default(autoincrement())
+  userId   Int   @unique
+  level    Int   @default(1)
+  exp      Int   @default(0)
+  coin     Int   @default(0)
+  ticket   Int   @default(0)
+
+  user     User  @relation(fields: [userId], references: [id])
+}
+
+model Skill {
+  id                   Int                   @id @default(autoincrement())
+  skill_name           String
+  skill_type           String
+  image_url            String
+  introAnswerWeights   IntroAnswerWeight[]   // Relation to IntroAnswerWeight
+  skillCareers         SkillCareer[]         // Relation to SkillCareer
+  lessons              Lesson[]              // Relation to Lesson
+}
+
+model Career {
+  id         Int    @id @default(autoincrement())
+  name       String
+  description String?
+  imageUrl   String?
+
+  skills     SkillCareer[]
+}
+
+model SkillCareer {
+  skillId  Int
+  careerId Int
+
+  skill    Skill  @relation(fields: [skillId], references: [id])
+  career   Career @relation(fields: [careerId], references: [id])
+
+  @@id([skillId, careerId]) // Composite Primary Key
+}
+
+model Lesson {
+  id          Int    @id @default(autoincrement())
+  skillId     Int
+  name        String
+  description String?
+
+  skill       Skill   @relation(fields: [skillId], references: [id])
+  lessonProgress LessonProgress[]
+  quizzes     Quiz[]
+}
+
+model LessonProgress {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  lessonId   Int
+  completeAt DateTime @default(now())
+  coin       Int
+  xp         Int
+  ticket     Int
+
+  user       User   @relation(fields: [userId], references: [id])
+  lesson     Lesson @relation(fields: [lessonId], references: [id])
+}
+
+model Quiz {
+  id           Int    @id @default(autoincrement())
+  lessonId     Int
+  name         String
+  correctAnswer String
+  passScore    Int
+
+  lesson       Lesson   @relation(fields: [lessonId], references: [id])
+  choices      QuizChoice[]
+  quizProgress QuizProgress[]
+}
+
+model QuizChoice {
+  id       Int    @id @default(autoincrement())
+  quizId   Int
+  choice   String
+
+  quiz     Quiz   @relation(fields: [quizId], references: [id])
+}
+
+model QuizProgress {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  quizId     Int
+  score      Int
+  completeAt DateTime @default(now())
+
+  user       User   @relation(fields: [userId], references: [id])
+  quiz       Quiz   @relation(fields: [quizId], references: [id])
+}
+
+model IntroQuestion {
+  id       Int    @id @default(autoincrement())
+  question String
+
+  answers  IntroAnswer[]
+}
+
+model IntroAnswer {
+  id          Int    @id @default(autoincrement())
+  questionId  Int
+  answer      String
+
+  question    IntroQuestion @relation(fields: [questionId], references: [id])
+  answerWeights IntroAnswerWeight[]
+}
+
+model IntroAnswerWeight {
+  skill      Skill       @relation(fields: [skillId], references: [id])
+  answer     IntroAnswer @relation(fields: [answerId], references: [id])
+  skillId    Int
+  answerId   Int
+
+  @@id([skillId, answerId])  // Composite ID for IntroAnswerWeight
+}
+
+model Appearance {
+  id          Int    @id @default(autoincrement())
+  description String
+  imgUrl      String
+  rate        Int
+  type        String
+
+  owners      AppearanceOwn[]
+  gachapongs   Gachapong[] 
+  appearanceWears AppearanceWear[]  // Relation to AppearanceWear
+}
+
+model AppearanceOwn {
+  id           Int    @id @default(autoincrement())
+  userId       Int
+  appearanceId Int
+
+  user         User       @relation(fields: [userId], references: [id])
+  appearance   Appearance @relation(fields: [appearanceId], references: [id])
+
+  @@unique([userId, appearanceId]) // Ensures a user owns the appearance once
+}
+
+model AppearanceWear {
+  userId       Int
+  appearanceId Int
+
+  user         User       @relation(fields: [userId], references: [id])
+  appearance   Appearance @relation(fields: [appearanceId], references: [id])
+
+  @@unique([userId, appearanceId]) // Ensures a user wears the appearance only once
+}
+
+model Gachapong {
+  id           Int        @id @default(autoincrement())
+  userId       Int
+  appearanceId Int?
+  user         User       @relation(fields: [userId], references: [id])
+  appearance   Appearance? @relation(fields: [appearanceId], references: [id])
+}
+
+model Reward {
+  id          Int    @id @default(autoincrement())
+  name        String
+  description String?
+  amount      Int
+  cost        Int
+
+  redeemed    RewardRedeemed[]
+}
+
+model RewardRedeemed {
+  id       Int @id @default(autoincrement())
+  userId   Int
+  rewardId Int
+
+  user     User   @relation(fields: [userId], references: [id])
+  reward   Reward @relation(fields: [rewardId], references: [id])
 }
