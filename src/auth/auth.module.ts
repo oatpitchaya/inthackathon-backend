@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { AuthService } from '../../auth/auth.service';
-import { AuthController } from '../../auth/auth.controller';
-import { FirebaseConfig } from '../firebase.config';
+import { AuthService } from './auth.service';
+import { AuthController } from './auth.controller';
+import { FirebaseConfig } from '../config/firebase.config';
 
 @Module({
   imports: [ConfigModule],
