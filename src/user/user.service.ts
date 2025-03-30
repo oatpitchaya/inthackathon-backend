@@ -1,4 +1,5 @@
 // src/user/user.service.ts
+/* eslint-disable */
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/config/prisma/prisma.service';
 import { User } from '@prisma/client';
@@ -7,7 +8,6 @@ import { User } from '@prisma/client';
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
 
-  // Create a new user
   async createUser(email: string, username: string): Promise<User> {
     return this.prisma.user.create({
       data: {
@@ -18,11 +18,10 @@ export class UserService {
     });
   }
 
-  // Find user by ID
   async findById(id: number): Promise<User | null> {
     return this.prisma.user.findUnique({
       where: {
-        id: id, // Ensure this is an integer
+        id: id, 
       },
     });
   }
@@ -35,15 +34,10 @@ export class UserService {
   }
 
   // Update user details
-  async updateUser(
-    id: number,
-    email?: string,
-    username?: string,
-  ): Promise<User> {
+  async updateUser(userId: number, username: string): Promise<User> {
     return this.prisma.user.update({
-      where: { id },
+      where: { id: userId },
       data: {
-        email,
         username,
       },
     });

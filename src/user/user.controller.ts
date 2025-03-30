@@ -1,12 +1,11 @@
 // src/user/user.controller.ts
+/* eslint-disable */
 import {
   Controller,
   Get,
-  Post,
-  Param,
   Body,
   Put,
-  Delete,
+  Query,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from '@prisma/client';
@@ -15,21 +14,9 @@ import { User } from '@prisma/client';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  // Create a user
-  @Post()
-  async createUser(
-    @Body() createUserDto: { email: string; username: string },
-  ): Promise<User> {
-    return this.userService.createUser(
-      createUserDto.email,
-      createUserDto.username,
-    );
-  }
-
   // Get user by ID
-  @Get(':id')
-  async getUser(@Param('id') id: string): Promise<User | null> {
-    // Convert the id from string to number
+  @Get()
+  async getUser(@Query('id') id: string): Promise<User | null> {
     const userId = parseInt(id, 10);
     if (isNaN(userId)) {
       throw new Error('Invalid user ID');
@@ -38,21 +25,13 @@ export class UserController {
   }
 
   // Update user by ID
-  @Put(':id')
+  @Put()
   async updateUser(
-    @Param('id') id: number,
-    @Body() updateUserDto: { email?: string; username?: string },
+    @Body() updateUserDto: { userId: number; username: string },
   ): Promise<User> {
     return this.userService.updateUser(
-      id,
-      updateUserDto.email,
+      updateUserDto.userId,
       updateUserDto.username,
     );
-  }
-
-  // Delete user by ID
-  @Delete(':id')
-  async deleteUser(@Param('id') id: number): Promise<User> {
-    return this.userService.deleteUser(id);
   }
 }

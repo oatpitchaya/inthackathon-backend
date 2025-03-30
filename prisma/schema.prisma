@@ -34,20 +34,23 @@ model Character {
 }
 
 model Skill {
-  id           Int           @id @default(autoincrement())
-  skill_name   String
-  skill_type   String
-  image_url    String
+  id         Int    @id @default(autoincrement())
+  skill_name String
+  skill_type String
+  image_url  String
+
   skillCareers SkillCareer[] // Relation to SkillCareer
   lessons      Lesson[] // Relation to Lesson
   Introanswer  IntroAnswer[]
+  Topic        Topic[]
 }
 
 model Career {
-  id          Int     @id @default(autoincrement())
-  name        String
-  description String?
-  imageUrl    String?
+  id        Int     @id @default(autoincrement())
+  name      String
+  role      String?
+  lifestyle String?
+  imageUrl  String?
 
   skills SkillCareer[]
 }
@@ -62,15 +65,29 @@ model SkillCareer {
   @@id([skillId, careerId]) // Composite Primary Key
 }
 
+model Topic {
+  id      Int    @id @default(autoincrement())
+  skillId Int
+  topic   String
+
+  skill  Skill    @relation(fields: [skillId], references: [id])
+  Lesson Lesson[]
+}
+
 model Lesson {
   id          Int     @id @default(autoincrement())
-  skillId     Int
+  topicId     Int
   name        String
   description String?
+  exp         Int     @default(0)
+  coin        Int     @default(0)
+  ticket      Int     @default(0)
 
-  skill          Skill            @relation(fields: [skillId], references: [id])
+  topic          Topic            @relation(fields: [topicId], references: [id])
   lessonProgress LessonProgress[]
   quizzes        Quiz[]
+  Skill          Skill?           @relation(fields: [skillId], references: [id])
+  skillId        Int?
 }
 
 model LessonProgress {
@@ -78,32 +95,38 @@ model LessonProgress {
   userId     Int
   lessonId   Int
   completeAt DateTime @default(now())
-  coin       Int
-  xp         Int
-  ticket     Int
 
   user   User   @relation(fields: [userId], references: [id])
   lesson Lesson @relation(fields: [lessonId], references: [id])
 }
 
 model Quiz {
-  id            Int    @id @default(autoincrement())
-  lessonId      Int
-  name          String
-  correctAnswer String
-  passScore     Int
+  id        Int    @id @default(autoincrement())
+  lessonId  Int
+  name      String
+  passScore Int
 
   lesson       Lesson         @relation(fields: [lessonId], references: [id])
-  choices      QuizChoice[]
   quizProgress QuizProgress[]
+  quizQuestion QuizQuestion[]
 }
 
 model QuizChoice {
-  id     Int    @id @default(autoincrement())
-  quizId Int
-  choice String
+  id         Int    @id @default(autoincrement())
+  questionId Int
+  choice     String
 
-  quiz Quiz @relation(fields: [quizId], references: [id])
+  quiz QuizQuestion @relation(fields: [questionId], references: [id])
+}
+
+model QuizQuestion {
+  id       Int    @id @default(autoincrement())
+  quizId   Int
+  question String
+  answer   String
+
+  quiz       Quiz         @relation(fields: [quizId], references: [id])
+  quizChoice QuizChoice[]
 }
 
 model QuizProgress {
@@ -115,6 +138,7 @@ model QuizProgress {
 
   user User @relation(fields: [userId], references: [id])
   quiz Quiz @relation(fields: [quizId], references: [id])
+  @@unique([userId, quizId]) 
 }
 
 model IntroQuestion {

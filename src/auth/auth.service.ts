@@ -47,42 +47,36 @@ export class AuthService {
         }
       }
 
-      const firebaseToken = await admin
-        .auth()
-        .createCustomToken(firebaseUser.uid);
-
-      const existingUser = await this.prisma.user.findUnique({
+      let existingUser = await this.prisma.user.findUnique({
         where: { email },
       });
 
       if (!existingUser) {
         try {
-          const newUser = await this.prisma.user.create({
+          existingUser = await this.prisma.user.create({
             data: {
               email,
-              username: lineUserId,
+              username: '',
               createdAt: new Date(),
             },
           });
-          console.log('New user created in the database:', newUser);
         } catch (dbError) {
           console.error('Failed to insert user into the database:', dbError);
           throw new Error('Database user creation failed');
         }
-      } else {
-        console.log('Existing user found in the database:', existingUser);
       }
 
-      return {
-        firebaseToken,
-        user: {
-          uid: firebaseUser.uid,
+      const firebaseToken = await admin
+        .auth()
+        .createCustomToken(firebaseUser.uid, {
           lineUserId,
           email,
           name,
           picture,
-        },
-      };
+          username: existingUser.username,
+        });
+
+      return { firebaseToken };
     } catch (error) {
       console.error('Authentication failed:', error.message);
       throw new Error(`Authentication failed: ${error.message}`);
