@@ -13,17 +13,17 @@ services:
       - tawan-network
 
 
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: tawan-docker
-    ports:
-      - 3000:3000
-    depends_on:
-      - dev-db
-    volumes:
-      - ./src:/app/src
+  # app:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: tawan-docker
+  #   ports:
+  #     - 3000:3000
+  #   depends_on:
+  #     - dev-db
+  #   volumes:
+  #     - ./src:/app/src
 
 networks:
   tawan-network:

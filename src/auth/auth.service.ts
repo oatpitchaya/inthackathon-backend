@@ -18,7 +18,6 @@ export class AuthService {
       });
     }
   }
-
   async signInWithLine(idToken: string) {
     try {
       const decoded = jwt.decode(idToken) as any;
@@ -49,6 +48,7 @@ export class AuthService {
 
       let existingUser = await this.prisma.user.findUnique({
         where: { email },
+        include: { character: true }, // Fetch character if exists
       });
 
       if (!existingUser) {
@@ -58,7 +58,11 @@ export class AuthService {
               email,
               username: '',
               createdAt: new Date(),
+              character: {
+                create: {},
+              },
             },
+            include: { character: true },
           });
         } catch (dbError) {
           console.error('Failed to insert user into the database:', dbError);
@@ -74,9 +78,35 @@ export class AuthService {
           name,
           picture,
           username: existingUser.username,
+          characterData: existingUser.character
+            ? {
+                level: existingUser.character.level,
+                exp: existingUser.character.exp,
+                coin: existingUser.character.coin,
+                ticket: existingUser.character.ticket,
+              }
+            : null,
         });
 
-      return { firebaseToken };
+      return {
+        message: 'Authentication successful',
+        user: {
+          email: existingUser.email,
+          username: existingUser.username,
+          lineUserId,
+          name,
+          picture,
+          character: existingUser.character
+            ? {
+                level: existingUser.character.level,
+                exp: existingUser.character.exp,
+                coin: existingUser.character.coin,
+                ticket: existingUser.character.ticket,
+              }
+            : null,
+        },
+        firebaseToken,
+      };
     } catch (error) {
       console.error('Authentication failed:', error.message);
       throw new Error(`Authentication failed: ${error.message}`);
