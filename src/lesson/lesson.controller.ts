@@ -14,7 +14,7 @@ export class LessonController {
       quizAnswers: { quizId: number; [questionId: number]: string }[];
     },
   ): Promise<any> {
-    const { quizAnswers, userId } = body; // Destructure body to get quizAnswers and userId
+    const { quizAnswers, userId } = body;
     return this.lessonService.completeQuiz(quizAnswers, userId);
   }
 

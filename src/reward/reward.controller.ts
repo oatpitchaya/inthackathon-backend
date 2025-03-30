@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { Controller, Get } from '@nestjs/common';
 import { RewardService } from './reward.service';
 

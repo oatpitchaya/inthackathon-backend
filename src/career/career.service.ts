@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/config/prisma/prisma.service';
 

@@ -6,9 +6,7 @@ import { PrismaService } from 'src/config/prisma/prisma.service';
 export class LessonService {
   constructor(private prisma: PrismaService) {}
 
-  // 1. Retrieve topics by skillId
   async getLessonCompleteByUserId(userId: number) {
-    // Find the completed lessons by the user from the lesson_progress table
     const lessonProgresses = await this.prisma.lessonProgress.findMany({
       where: { userId },
       include: {
@@ -32,14 +30,14 @@ export class LessonService {
     const topic = await this.prisma.topic.findUnique({
       where: { id: topicId },
       include: {
-        skill: true, // Include skill details
+        skill: true,
         Lesson: {
           include: {
             quizzes: {
               include: {
                 quizQuestion: {
                   include: {
-                    quizChoice: true, // Include quiz choices
+                    quizChoice: true,
                   },
                 },
               },
@@ -53,12 +51,11 @@ export class LessonService {
       throw new Error('Topic not found');
     }
 
-    // Returning a structured and readable response
     return {
       topicId: topic.id,
       topicName: topic.topic,
       skillId: topic.skillId,
-      skillName: topic.skill.skill_name, // Include skill name
+      skillName: topic.skill.skill_name,
       lessons: topic.Lesson.map((lesson) => ({
         lessonId: lesson.id,
         lessonName: lesson.name,
@@ -68,7 +65,7 @@ export class LessonService {
           questions: quiz.quizQuestion.map((question) => ({
             questionId: question.id,
             questionText: question.question,
-            correctAnswer: question.answer, // ✅ Correct answer from `quiz_question.answer`
+            correctAnswer: question.answer,
             choices: question.quizChoice.map((choice) => ({
               choiceId: choice.id,
               choiceText: choice.choice,
@@ -79,21 +76,16 @@ export class LessonService {
     };
   }
 
-  // 3. Retrieve lesson progress by userId and lessonId
   async getLessonProgress(userId: number, lessonId: number) {
     const lessonProgress = await this.prisma.lessonProgress.findMany({
       where: { userId, lessonId },
       select: {
         completeAt: true,
-        // coin: true,
-        // xp: true,
-        // ticket: true,
       },
     });
     return lessonProgress;
   }
 
-  // 4. Retrieve quiz progress by userId and quizId
   async getQuizProgress(userId: number, quizId: number) {
     const quizProgress = await this.prisma.quizProgress.findMany({
       where: { userId, quizId },
@@ -106,7 +98,6 @@ export class LessonService {
   }
 
   async completeLesson(userId: number, lessonId: number) {
-    // Check if lesson exists and get rewards from the Lesson table
     const lesson = await this.prisma.lesson.findUnique({
       where: { id: lessonId },
     });
@@ -115,10 +106,8 @@ export class LessonService {
       throw new Error('Lesson not found');
     }
 
-    // Extract reward values from the Lesson table
     const { exp, coin, ticket } = lesson;
 
-    // 1️⃣ Mark lesson as completed
     const lessonProgress = await this.prisma.lessonProgress.create({
       data: {
         userId,
@@ -126,7 +115,6 @@ export class LessonService {
       },
     });
 
-    // 2️⃣ Update user rewards in Character table
     const updatedCharacter = await this.prisma.character.update({
       where: { userId },
       data: {
@@ -136,7 +124,6 @@ export class LessonService {
       },
     });
 
-    // 3️⃣ Return structured response
     return {
       message: 'Lesson completed successfully!',
       completedLesson: {
@@ -153,14 +140,13 @@ export class LessonService {
       },
     };
   }
-  //retrieve quiz with lessonId
   async getQuizzesByLessonId(lessonId: number) {
     const quizzes = await this.prisma.quiz.findMany({
-      where: { lessonId }, // Filter quizzes by lessonId
+      where: { lessonId },
       include: {
         quizQuestion: {
           include: {
-            quizChoice: true, // Include quiz choices for each question
+            quizChoice: true,
           },
         },
       },
@@ -186,13 +172,12 @@ export class LessonService {
     for (const answer of quizAnswers) {
       const { quizId, ...questions } = answer;
 
-      // Fetch quiz data and quiz questions
       const quiz = await this.prisma.quiz.findUnique({
         where: { id: quizId },
         include: {
           quizQuestion: {
             include: {
-              quizChoice: true, // Include quiz choices
+              quizChoice: true,
             },
           },
         },
@@ -204,24 +189,22 @@ export class LessonService {
 
       let totalScore = 0;
 
-      // Calculate score for each question
       for (const [questionId, userAnswer] of Object.entries(questions)) {
         const question = quiz.quizQuestion.find(
           (q) => q.id === parseInt(questionId),
         );
 
         if (question && userAnswer === question.answer) {
-          totalScore += 1; // Increment score if the answer is correct
+          totalScore += 1;
         }
       }
 
-      // Upsert QuizProgress (Update if exists, create if not)
       const quizProgress = await this.prisma.quizProgress.upsert({
         where: {
-          userId_quizId: { userId, quizId }, // Ensure quizId and userId are correctly scoped
+          userId_quizId: { userId, quizId },
         },
         update: {
-          score: totalScore, // Update the score
+          score: totalScore,
         },
         create: {
           userId,
@@ -229,12 +212,8 @@ export class LessonService {
           score: totalScore,
         },
       });
-
-      console.log(
-        `User ${userId} completed quiz ${quizId} with score ${totalScore}`,
-      );
     }
 
-    return { message: 'Quiz progress updated successfully' };
+    return true;
   }
 }
